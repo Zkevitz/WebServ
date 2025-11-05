@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exemple de Requêtes HTTP</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>Interface pour Requêtes HTTP</h1>
+
+        <div class="section">
+            <h2>Envoyer une requête GET au CGI avec Query-String</h2>
+            <form method="GET" action="/cgi-bin/calc.py">
+                <label for="queryParam">Paramètre :</label>
+                <input type="text" id="queryParam" name="param" placeholder="Valeur du paramètre">
+                <button type="submit">Envoyer</button>
+            </form>
+        </div>
+
+        <div class="section">
+            <h2>Envoyer une requête PATCH invalide</h2>
+            <button id="sendInvalidPatch">Envoyer une requête PATCH invalide</button>
+        </div>
+        
+        <script>
+            /**
+             * Envoie une requête PATCH invalide au serveur et remplace le contenu de la page actuelle.
+             */
+             document.getElementById("sendInvalidPatch").addEventListener("click", () => {
+                fetch("/", {
+            method: 'PATCH',
+            body: new URLSearchParams({ param: "Valeur de test" }),
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            })
+            .then((response) => {
+                // Tente de lire le corps même en cas d'erreur HTTP.
+                return response.text().then((data) => {
+                    if (!response.ok) {
+                        // Retourne une erreur avec la réponse pour le bloc catch.
+                        throw { status: response.status, statusText: response.statusText, data };
+                    }
+                    return data; // Si pas d'erreur, retourne les données.
+                });
+            })
+            .then((data) => {
+                document.open();
+                document.write(data); // Affiche la réponse HTML.
+                document.close();
+            })
+            .catch((error) => {
+                console.error('Erreur capturée:', error);
+                document.open();
+                // Affiche la réponse HTML même en cas d'erreur.
+                document.write(error.data || `<h1>Erreur ${error.status}</h1><p>${error.statusText}</p>`);
+                document.close();
+            });
+});
+
+
+        </script>
+        
+
+        <div class="section">
+            <h2>Envoyer une requête POST au CGI avec Corps</h2>
+            <form method="POST" action="/cgi-bin/post.py">
+                <label for="queryParam">Paramètre :</label>
+                <input type="text" id="queryParam" name="param" placeholder="Valeur du paramètre">
+                <button type="submit">Envoyer</button>
+            </form>
+        </div>
+        
+        <div class="section">
+            <h2>Uploader un fichier</h2>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <input type="file" id="fileInput" name="file">
+                <button type="button" onclick="uploadFile()">Upload</button>
+            </form>
+        </div>
+
+        <div class="section">
+            <h2>download un fichier</h2>
+            <input type="text" id="downloadFileName" placeholder="Nom du fichier à download">
+            <button onclick="downloadFile()">download le fichier</button>
+        </div>
+
+        <div class="section">
+            <h2>Supprimer un fichier</h2>
+            <input type="text" id="deleteFileName" placeholder="Nom du fichier à supprimer">
+            <button onclick="deleteFile()">Supprimer le fichier</button>
+            <pre id="downloadResponse"></pre>
+        </div>
+
+        <div id="responseOutput"></div>
+    </div>
+
+    <script>
+        function makeRequest(type) {
+            fetch(`/api/resource`, { method: type })
+                .then(response => response.text())
+                .then(data => {
+                    document.open(); // Prépare la page actuelle pour un nouveau contenu.
+                    document.write(data); // Insère directement le contenu HTML reçu.
+                    document.close(); // Termine l'écriture.
+                    //document.getElementById('responseOutput').textContent = `Réponse de la requête ${type}: ${data}`;
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    document.getElementById('responseOutput').textContent = `Erreur lors de la requête ${type}: ${error}`;
+                });
+        }
+        // function makeRequestOnNewPage(type) {
+        //     if (type !== 'POST' && type !== 'GET' && type !== 'DELETE') {
+        //         window.location.href = 'http://google.com';
+        //         return; // Empêche l'exécution des lignes suivantes
+        //     }
+        //     fetch(`/api/resource`, { method: type })
+        //         .then(response => response.text())
+        //         .then(data => {
+        //             document.getElementById('responseOutput').textContent = `Réponse de la requête ${type}: ${data}`;
+        //         })
+        //         .catch(error => {
+        //             console.error('Erreur:', error);
+        //             document.getElementById('responseOutput').textContent = `Erreur lors de la requête ${type}: ${error}`;
+        //         });
+        // }
+
+        function uploadFile() {
+        const formElement = document.getElementById('uploadForm');
+        const outputElement = document.getElementById('responseOutput');
+
+        if (!formElement) {
+          console.error('Erreur : le formulaire "uploadForm" est introuvable.');
+         return;
+        }
+        if (!outputElement) {
+          console.error('Erreur : élément "responseOutput" introuvable.');
+         return;
+        }
+
+        const formData = new FormData(formElement);
+
+        fetch('/api/upload', {
+         method: 'POST',
+         body: formData,
+        })
+            .then(response => {
+              return response.text()
+                  .then((data) => {
+                      if (!response.ok) {
+                         throw { status: response.status, statusText: response.statusText, data };
+                        }
+                     return data;
+                   })
+                  .catch(err => {
+                      console.error('Erreur lors de la lecture de la réponse :', err);
+                      throw { status: response.status, statusText: 'erreur', data: null };
+                    });
+         })
+          .then(data => {
+              outputElement.textContent = `Réponse de l'upload: ${data}`;
+          })
+         .catch(error => {
+             console.error('Erreur:', error);
+             outputElement.innerHTML = `
+                 <h1>Erreur ${error.status}</h1>
+                    <p>${error.statusText}</p>
+                    <p>${error.data || ''}</p>
+            `;
+          });
+}
+
+function downloadFile() {
+    const fileName = document.getElementById('downloadFileName').value;
+    if (!fileName) {
+        alert('Veuillez entrer le nom du fichier à télécharger.');
+        return;
+    }
+
+    fetch(`uploads/${fileName}`, { method: 'GET' })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Erreur lors du téléchargement: ${response.status} ${response.statusText}`);
+            }
+            return response.blob(); // Récupère le contenu sous forme de Blob
+        })
+        .then(blob => {
+            // Crée un lien temporaire pour télécharger le fichier
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName; // Nom du fichier pour le téléchargement
+            document.body.appendChild(a);
+            a.click(); // Simule un clic pour déclencher le téléchargement
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url); // Libère l'URL créée
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            document.getElementById('responseOutput').textContent = `Erreur lors du téléchargement: ${error.message}`;
+        });
+}
+
+
+        // function downloadFile() {
+        //     const fileName = document.getElementById('downloadFileName').value;
+        //     fetch(`uploads/${fileName}`, { method: 'GET' })
+        //         .then(response => response.text())
+        //         .then(data => {
+        //             document.getElementById('responseOutput').textContent = `Réponse du telechargement: ${data}`;
+        //         })
+        //         .catch(error => {
+        //             console.error('Erreur:', error);
+        //             document.getElementById('responseOutput').textContent = `Erreur lors du telechargement: ${error}`;
+        //         });
+        // }
+
+        function deleteFile() {
+            const fileName = document.getElementById('deleteFileName').value;
+            fetch(`uploads/${fileName}`, { method: 'DELETE' })
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('responseOutput').textContent = `Réponse de la suppression: ${data}`;
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    document.getElementById('responseOutput').textContent = `Erreur lors de la suppression: ${error}`;
+                });
+        }
+    </script>
+
+</body>
+</html>
