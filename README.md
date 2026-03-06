@@ -163,7 +163,6 @@ Pour les routes configurées avec `cgi_pass`, le serveur `fork()` un processus f
 ## 📚 Ressources utiles
 
 - [RFC 7230 — HTTP/1.1 Message Syntax](https://tools.ietf.org/html/rfc7230)
-- [Beej's Guide to Network Programming](https://beej.us/guide/bgnet/)
 - [Documentation NGINX — directives](https://nginx.org/en/docs/dirindex.html)
 - [MDN — HTTP](https://developer.mozilla.org/fr/docs/Web/HTTP)
 
