@@ -168,8 +168,10 @@ Pour les routes configurées avec `cgi_pass`, le serveur `fork()` un processus f
 
 ---
 
-## 👤 Auteur
+## Auteurs
 
-**Zkevitz** — École 42
+Travail réalisé dans le cadre de notre cursus a 42 Bruxelles
+- **Rheck** - [Github](https://github.com/Robthebob34)
+- **Mgigot** - [Github](https://github.com/Zkevitz)
 
 > *"Le but du projet WebServ est de comprendre comment fonctionne un serveur HTTP en l'implémentant soi-même, de la socket à la réponse."*
